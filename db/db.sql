@@ -1,16 +1,6 @@
-DROP DATABASE IF EXISTS db_panchos_polleria;
-CREATE DATABASE db_panchos_polleria;
-USE db_panchos_polleria;
-
--- ventas:
--- Polleria Panchos
--- mesa # 14
--- Mozo javier
--- 1/8 pecho           s/12.00
--- inca cola 1.5lt     s/ 7.50
--- 1/8 pierna          s/12.00
--- total               s/31.50
--- efectivo
+DROP DATABASE IF EXISTS db_gallinazo;
+CREATE DATABASE db_gallinazo;
+USE db_gallinazo;
 
 DROP  TABLE IF EXISTS reg_gastos;
 CREATE TABLE reg_gastos(
@@ -361,6 +351,7 @@ CREATE TABLE productos(
 DROP TABLE IF EXISTS productos_historial;
 CREATE TABLE productos_historial(
     id INT AUTO_INCREMENT PRIMARY KEY,
+    operacion VARCHAR(100),
     id_producto INT,
     id_producto_origen INT,
     producto VARCHAR(100),
