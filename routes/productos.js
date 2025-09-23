@@ -92,10 +92,10 @@ router.post('/productos', async (req, res) => {
       const nuevoOrden = maxOrden + 1;
       const [result] = await database.query('INSERT INTO productos (producto, costo, orden) VALUES(?, ?, ?)', [producto, costo, nuevoOrden]);
       const nuevoId = result.insertId;
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, id_producto_origen, producto, costo, orden) VALUES(?, ?, ?, ?, ?, ?)', ['INSERT', nuevoId, null, producto, costo, nuevoOrden]);
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES(?, ?, ?, ?, ?)', ['AGREGADO', nuevoId, producto, costo, nuevoOrden]);
     }
   } catch (error) {
-    console.log(error.code);
+    console.error(error);
   } finally {
     const [productos] = await database.query('SELECT * FROM productos');
     const [productos_historial] = await database.query('SELECT * FROM productos_historial');
@@ -107,11 +107,11 @@ router.put('/productos/:id', async (req, res) => {
   const { producto, costo, orden } = req.body;
   try {
     if (producto !== "" && costo > 0) {
-      const [result] = await database.query('UPDATE productos SET producto = ?, costo = ?, orden = ? WHERE id = ?', [producto, costo, orden, id]);
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, id_producto_origen, producto, costo, orden) VALUES (?, ?, ?, ?, ?, ?)', ['UPDATE', id, null, producto, costo, orden]);
+      await database.query('UPDATE productos SET producto = ?, costo = ?, orden = ? WHERE id = ?', [producto, costo, orden, id]);
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['MODIFICADO', id, producto, costo, orden]);
     }
   } catch (error) {
-    console.log(error.code);
+    console.error(error);
   } finally {
     const [productos] = await database.query('SELECT * FROM productos');
     const [productos_historial] = await database.query('SELECT * FROM productos_historial');
@@ -120,37 +120,18 @@ router.put('/productos/:id', async (req, res) => {
 });
 
 router.delete('/productos/:id', async (req, res) => {
-  console.log('hi')
   const { id } = req.params;
-  const { producto, costo, orden } = req.body;
-  console.log(req.body);
-  console.log(req.params);
   try {
-    if (producto !== "" && costo > 0) {
-      const [result] = await database.query(' DELETE FROM productos WHERE id = ?', [id]);
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, id_producto_origen, producto, costo, orden) VALUES (?, ?, ?, ?, ?, ?)', ['DELETE', id, null, producto, costo, orden]);
+    if (id > 0) {
+      const [findProduct] = await database.query('SELECT * FROM productos WHERE id = ?', [id])
+      if (findProduct[0]) {
+        const { id, producto, costo, orden } = findProduct[0];
+        await database.query('DELETE FROM productos WHERE id = ?', [id]);
+        await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['ELIMINADO', id, producto, costo, orden]);
+      }
     }
   } catch (error) {
-    console.log(error.code);
-  } finally {
-    const [productos] = await database.query('SELECT * FROM productos');
-    const [productos_historial] = await database.query('SELECT * FROM productos_historial');
-    return res.status(200).json({ productos, productos_historial });
-  }
-});
-
-router.post('/productos', async (req, res) => {
-  const { producto, costo } = req.body;
-  try {
-    if (producto !== "" && costo > 0) {
-      const maxOrden = await getMaxOrden();
-      const nuevoOrden = maxOrden + 1;
-      const [result] = await database.query('INSERT INTO productos (producto, costo, orden) VALUES(?, ?, ?)', [producto, costo, nuevoOrden]);
-      const nuevoId = result.insertId;
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, id_producto_origen, producto, costo, orden) VALUES(?, ?, ?, ?, ?, ?)', ['INSERT', nuevoId, null, producto, costo, nuevoOrden]);
-    }
-  } catch (error) {
-    console.log(error.code);
+    console.error(error);
   } finally {
     const [productos] = await database.query('SELECT * FROM productos');
     const [productos_historial] = await database.query('SELECT * FROM productos_historial');
