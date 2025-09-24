@@ -2,16 +2,7 @@ const express = require("express");
 const router = express.Router();
 const database = require("../models/database");
 
-router.get("/productos", async (req, res) => {
-  try {
-    const [productos] = await database.query('SELECT * FROM productos');
-    const [productos_historial] = await database.query('SELECT * FROM productos_historial');
-    res.status(200).json({ productos, productos_historial });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json([]);
-  }
-});
+
 
 router.get("/productos/all", async (req, res) => {
   try {
@@ -74,15 +65,30 @@ const getMaxOrden = async () => {
   return result[0].max_orden || 0;
 }
 
-const getProximoMenor = async (orden) => {
-  const [result] = await database.query('SELECT id, orden FROM productos WHERE orden < ? ORDER BY orden DESC LIMIT 1', [orden]);
-  return result.length > 0 ? result[0] : null;
+const obtenerDatosActualizados = async () => {
+  const [productos] = await database.query('SELECT * FROM productos ORDER BY ORDEN');
+  const [productos_historial] = await database.query('SELECT * FROM productos_historial ORDER BY fecha DESC');
+  return { productos, productos_historial };
 }
 
-const getProximoMayor = async (orden) => {
-  const [result] = await database.query('SELECT id, orden FROM productos WHERE orden > ? ORDER BY orden ASC LIMIT 1', [orden]);
-  return result.length > 0 ? result[0] : null;
-}
+const emitirActualizacionesProductos = (req) => {
+  if (req.io) {
+    obtenerDatosActualizados().then(data => {
+      req.io.to('productos-room').emit('productos-actualizados', data);
+      console.log('Actualización de productos emitida');
+    });
+  }
+};
+
+router.get("/productos", async (req, res) => {
+  try {
+    const data = await obtenerDatosActualizados();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json([]);
+  }
+});
 
 router.post('/productos', async (req, res) => {
   const { producto, costo } = req.body;
@@ -97,11 +103,13 @@ router.post('/productos', async (req, res) => {
   } catch (error) {
     console.error(error);
   } finally {
-    const [productos] = await database.query('SELECT * FROM productos');
-    const [productos_historial] = await database.query('SELECT * FROM productos_historial');
-    return res.status(200).json({ productos, productos_historial });
+    const data = await obtenerDatosActualizados();
+    // Emitir actualización
+    emitirActualizacionesProductos(req);
+    return res.status(200).json(data);
   }
 });
+
 router.put('/productos/:id', async (req, res) => {
   const { id } = req.params;
   const { producto, costo, orden } = req.body;
@@ -113,9 +121,9 @@ router.put('/productos/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
   } finally {
-    const [productos] = await database.query('SELECT * FROM productos');
-    const [productos_historial] = await database.query('SELECT * FROM productos_historial');
-    return res.status(200).json({ productos, productos_historial });
+    const data = await obtenerDatosActualizados();
+    emitirActualizacionesProductos(req);
+    return res.status(200).json(data);
   }
 });
 
@@ -133,18 +141,56 @@ router.delete('/productos/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
   } finally {
-    const [productos] = await database.query('SELECT * FROM productos');
-    const [productos_historial] = await database.query('SELECT * FROM productos_historial');
-    return res.status(200).json({ productos, productos_historial });
+    const data = await obtenerDatosActualizados();
+    emitirActualizacionesProductos(req);
+    return res.status(200).json(data);
   }
 });
 
+const getProximoMenor = async (orden) => {
+  const [result] = await database.query('SELECT * FROM productos WHERE orden < ? ORDER BY orden DESC LIMIT 1', [orden]);
+  return result.length > 0 ? result[0] : null;
+}
+
+const getProximoMayor = async (orden) => {
+  const [result] = await database.query('SELECT * FROM productos WHERE orden > ? ORDER BY orden ASC LIMIT 1', [orden]);
+  return result.length > 0 ? result[0] : null;
+}
+
 router.post('/productos/subir', async (req, res) => {
-  console.log(req.body)
+  const { id, producto, costo, orden } = req.body.item;
+  const menor = await getProximoMenor(orden);
   try {
-    res.status(200).json({ ok: ok })
+    if (menor) {
+      await database.query('UPDATE productos SET orden = ? WHERE id = ?', [menor.orden, id]);
+      await database.query('UPDATE productos SET orden = ? WHERE id = ?', [orden, menor.id]);
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['SUBE', id, producto, costo, menor.orden]);
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['BAJA', menor.id, menor.producto, menor.costo, orden]);
+    }
   } catch (error) {
-    res.status(500).json(error)
+    console.error(error);
+  } finally {
+    const data = await obtenerDatosActualizados();
+    emitirActualizacionesProductos(req);
+    return res.status(200).json(data);
+  }
+})
+router.post('/productos/bajar', async (req, res) => {
+  const { id, producto, costo, orden } = req.body.item;
+  const mayor = await getProximoMayor(orden);
+  try {
+    if (mayor) {
+      await database.query('UPDATE productos SET orden = ? WHERE id = ?', [mayor.orden, id]);
+      await database.query('UPDATE productos SET orden = ? WHERE id = ?', [orden, mayor.id]);
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['BAJA', id, producto, costo, mayor.orden]);
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['SUBE', mayor.id, mayor.producto, mayor.costo, orden]);
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    const data = await obtenerDatosActualizados();
+    emitirActualizacionesProductos(req);
+    return res.status(200).json(data);
   }
 })
 
