@@ -1,64 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const database = require("../models/database");
-
-
-
-router.get("/productos/all", async (req, res) => {
-  try {
-    const [response] = await database.query('SELECT * FROM reg_productos')
-    res.status(201).json(response)
-  } catch (error) {
-    console.error(error);
-    res.status(500).json([])
-  }
-})
-router.get("/productos/last_id", async (req, res) => {
-  try {
-    const [response] = await database.query(
-      "SELECT MAX(id_reg_producto) AS last_id FROM reg_productos"
-    );
-    res.status(201).json(response[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(0);
-  }
-});
-
-router.post("/productos/agregar", async (req, res) => {
-  try {
-    const [result] = await database.query('CALL agregar_reg_producto(?, ?)', [req.body.producto.producto, req.body.producto.costo]);
-    res.status(201).json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error);
-  }
-});
-
-router.post("/productos/modificar", async (req, res) => {
-  try {
-    const [result] = await database.query('CALL modificar_reg_producto(?, ?, ?)', [
-      req.body.producto.id_reg_producto,
-      req.body.producto.producto,
-      req.body.producto.costo
-    ]);
-    res.status(201).json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error);
-  }
-});
-
-router.post("/productos/eliminar", async (req, res) => {
-  try {
-    const [result] = await database.query('CALL eliminar_reg_producto(?)', [req.body.producto.id_reg_producto])
-    res.status(200).json(result)
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error)
-  }
-
-})
+const { format } = require('date-fns')
 
 const getMaxOrden = async () => {
   const [result] = await database.query('SELECT MAX(orden) AS max_orden FROM productos');
@@ -66,17 +9,31 @@ const getMaxOrden = async () => {
 }
 
 const obtenerDatosActualizados = async () => {
-  const [productos] = await database.query('SELECT * FROM productos ORDER BY ORDEN');
-  const [productos_historial] = await database.query('SELECT * FROM productos_historial ORDER BY fecha DESC');
+  const today = new Date();
+  const fi = format(today, 'yyyy-MM-dd');
+  const ff = format(today, 'yyyy-MM-dd');
+  const fi_ = `${fi} 00:00:00`
+  const ff_ = `${ff} 23:59:59`
+  let productos = [];
+  let productos_historial = [];
+  try {
+    [productos] = await database.query('SELECT * FROM productos ORDER BY ORDEN');
+    [productos_historial] = await database.query('SELECT * FROM productos_historial WHERE fecha BETWEEN ? AND ? ORDER BY fecha DESC', [fi_, ff_]);
+  } catch (error) {
+    console.error(error);
+  }
   return { productos, productos_historial };
-}
+};
 
-const emitirActualizacionesProductos = (req) => {
+const emitirActualizacionesProductos = async (req) => {
   if (req.io) {
-    obtenerDatosActualizados().then(data => {
+    try {
+      const data = await obtenerDatosActualizados();
       req.io.to('productos-room').emit('productos-actualizados', data);
       console.log('Actualización de productos emitida');
-    });
+    } catch (error) {
+      console.error('Error al emitir actualización:', error);
+    }
   }
 };
 
@@ -105,7 +62,7 @@ router.post('/productos', async (req, res) => {
   } finally {
     const data = await obtenerDatosActualizados();
     // Emitir actualización
-    emitirActualizacionesProductos(req);
+    await emitirActualizacionesProductos(req);
     return res.status(200).json(data);
   }
 });
@@ -122,7 +79,7 @@ router.put('/productos/:id', async (req, res) => {
     console.error(error);
   } finally {
     const data = await obtenerDatosActualizados();
-    emitirActualizacionesProductos(req);
+    await emitirActualizacionesProductos(req);
     return res.status(200).json(data);
   }
 });
@@ -142,7 +99,7 @@ router.delete('/productos/:id', async (req, res) => {
     console.error(error);
   } finally {
     const data = await obtenerDatosActualizados();
-    emitirActualizacionesProductos(req);
+    await emitirActualizacionesProductos(req);
     return res.status(200).json(data);
   }
 });
@@ -171,7 +128,7 @@ router.post('/productos/subir', async (req, res) => {
     console.error(error);
   } finally {
     const data = await obtenerDatosActualizados();
-    emitirActualizacionesProductos(req);
+    await emitirActualizacionesProductos(req);
     return res.status(200).json(data);
   }
 })
@@ -189,8 +146,22 @@ router.post('/productos/bajar', async (req, res) => {
     console.error(error);
   } finally {
     const data = await obtenerDatosActualizados();
-    emitirActualizacionesProductos(req);
+    await emitirActualizacionesProductos(req);
     return res.status(200).json(data);
+  }
+})
+
+router.get('/productos/xfechas', async (req, res) => {
+  const { fi, ff } = req.query
+  const fi_ = `${fi} 00:00:00`
+  const ff_ = `${ff} 23:59:59`
+  let rows = [];
+  try {
+    [rows] = await database.query('SELECT * FROM productos_historial WHERE fecha BETWEEN ? AND ? ORDER BY fecha DESC', [fi_, ff_]);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    return res.status(200).json(rows)
   }
 })
 
