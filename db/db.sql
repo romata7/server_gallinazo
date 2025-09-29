@@ -356,7 +356,7 @@ CREATE TABLE productos_historial(
     producto VARCHAR(100),
     costo DECIMAL(10,2),
     orden INT,
-    fecha DATETIME DEFAULT NOW()
+    fecha VARCHAR(20)
 );
 
 -- Crear el índice compuesto en 'activo' y 'producto'

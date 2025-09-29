@@ -55,7 +55,8 @@ router.post('/productos', async (req, res) => {
       const nuevoOrden = maxOrden + 1;
       const [result] = await database.query('INSERT INTO productos (producto, costo, orden) VALUES(?, ?, ?)', [producto, costo, nuevoOrden]);
       const nuevoId = result.insertId;
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES(?, ?, ?, ?, ?)', ['AGREGADO', nuevoId, producto, costo, nuevoOrden]);
+      const fecha = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden, fecha) VALUES(?, ?, ?, ?, ?, ?)', ['AGREGADO', nuevoId, producto, costo, nuevoOrden, fecha]);
     }
   } catch (error) {
     console.error(error);
@@ -73,7 +74,8 @@ router.put('/productos/:id', async (req, res) => {
   try {
     if (producto !== "" && costo > 0) {
       await database.query('UPDATE productos SET producto = ?, costo = ?, orden = ? WHERE id = ?', [producto, costo, orden, id]);
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['MODIFICADO', id, producto, costo, orden]);
+      const fecha = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden, fecha) VALUES (?, ?, ?, ?, ?, ?)', ['MODIFICADO', id, producto, costo, orden, fecha]);
     }
   } catch (error) {
     console.error(error);
@@ -92,7 +94,8 @@ router.delete('/productos/:id', async (req, res) => {
       if (findProduct[0]) {
         const { id, producto, costo, orden } = findProduct[0];
         await database.query('DELETE FROM productos WHERE id = ?', [id]);
-        await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['ELIMINADO', id, producto, costo, orden]);
+        const fecha = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+        await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden, fecha) VALUES (?, ?, ?, ?, ?, ?)', ['ELIMINADO', id, producto, costo, orden, fecha]);
       }
     }
   } catch (error) {
@@ -121,8 +124,9 @@ router.post('/productos/subir', async (req, res) => {
     if (menor) {
       await database.query('UPDATE productos SET orden = ? WHERE id = ?', [menor.orden, id]);
       await database.query('UPDATE productos SET orden = ? WHERE id = ?', [orden, menor.id]);
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['SUBE', id, producto, costo, menor.orden]);
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['BAJA', menor.id, menor.producto, menor.costo, orden]);
+      const fecha = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden, fecha) VALUES (?, ?, ?, ?, ?, ?)', ['SUBE', id, producto, costo, menor.orden, fecha]);
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden, fecha) VALUES (?, ?, ?, ?, ?, ?)', ['BAJA', menor.id, menor.producto, menor.costo, orden, fecha]);
     }
   } catch (error) {
     console.error(error);
@@ -139,8 +143,9 @@ router.post('/productos/bajar', async (req, res) => {
     if (mayor) {
       await database.query('UPDATE productos SET orden = ? WHERE id = ?', [mayor.orden, id]);
       await database.query('UPDATE productos SET orden = ? WHERE id = ?', [orden, mayor.id]);
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['BAJA', id, producto, costo, mayor.orden]);
-      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden) VALUES (?, ?, ?, ?, ?)', ['SUBE', mayor.id, mayor.producto, mayor.costo, orden]);
+      const fecha = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden, fecha) VALUES (?, ?, ?, ?, ?, ?)', ['BAJA', id, producto, costo, mayor.orden, fecha]);
+      await database.query('INSERT INTO productos_historial (operacion, id_producto, producto, costo, orden, fecha) VALUES (?, ?, ?, ?, ?, ?)', ['SUBE', mayor.id, mayor.producto, mayor.costo, orden, fecha]);
     }
   } catch (error) {
     console.error(error);
