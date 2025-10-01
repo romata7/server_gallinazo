@@ -359,6 +359,29 @@ CREATE TABLE productos_historial(
     fecha VARCHAR(20)
 );
 
+DROP TABLE IF EXISTS clientes;
+CREATE TABLE clientes(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    dniruc VARCHAR(11) UNIQUE,
+    name VARCHAR(100),
+    address VARCHAR(200),
+    phone VARCHAR(13),
+    orden INT
+);
+
+DROP TABLE IF EXISTS clientes_historial;
+CREATE TABLE clientes_historial(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    operacion VARCHAR(100),
+    id_cliente INT,
+    dniruc VARCHAR(11),
+    name VARCHAR(100),
+    address VARCHAR(200),
+    phone VARCHAR(13),
+    orden INT,
+    fecha VARCHAR(20)
+);
+
 -- Crear el índice compuesto en 'activo' y 'producto'
 CREATE INDEX idx_reg_productos_activo_producto ON reg_productos (activo, producto);
 DELIMITER $
