@@ -6,10 +6,10 @@ const socketIo = require('socket.io');
 
 const comandasRoutes = require("./routes/comandas");
 const mesasRoutes = require("./routes/mesas");
-const clientesRoutes = require("./routes/clientes");
 const mozosRoutes = require("./routes/mozos");
 const tipos_pagoRoutes = require("./routes/tipos_pago");
 const productosRoutes = require("./routes/productos");
+const clientesRoutes = require("./routes/clientes");
 const resumenRoutes = require("./routes/resumen");
 const gastosRoutes = require('./routes/gastos');
 const impresionesRoutes = require('./routes/impresiones');
@@ -52,6 +52,11 @@ io.on('connection', socket => {
     socket.join('productos-room');
     console.log(`Cliente ${socket.id} se unió a productos-room`);
   });
+
+  socket.on('join-clientes', () => {
+    socket.join('clientes-room');
+    console.log(`Cliente ${socket.id} se unió a clientes-room`);
+  })
 
   socket.on('disconnect', () => {
     console.log('Cliente desconectado:', socket.id);

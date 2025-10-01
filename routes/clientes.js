@@ -3,71 +3,6 @@ const router = express.Router();
 const database = require("../models/database");
 const { format } = require("date-fns/format");
 
-router.get("/clientes", async (req, res) => {
-  try {
-    const [results] = await database.query("CALL listar_clientes()");
-    res.json(results[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json([]);
-  }
-});
-
-router.get("/clientes/all", async (req, res) => {
-  try {
-    const [response] = await database.query('SELECT * FROM reg_clientes')
-    res.status(201).json(response)
-  } catch (error) {
-    console.error(error);
-    res.status(500).json([])
-  }
-})
-router.get("/clientes/last_id", async (req, res) => {
-  try {
-    const [response] = await database.query(
-      "SELECT MAX(id_reg_cliente) AS last_id FROM reg_clientes"
-    );
-    res.status(201).json(response[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(0);
-  }
-});
-
-router.post("/clientes/agregar", async (req, res) => {
-  try {
-    const [result] = await database.query('CALL agregar_reg_cliente(?)', [req.body.cliente.cliente]);
-    res.status(201).json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error);
-  }
-});
-
-router.post("/clientes/modificar", async (req, res) => {
-  try {
-    const [result] = await database.query('CALL modificar_reg_cliente(?, ?)', [
-      req.body.cliente.id_reg_cliente,
-      req.body.cliente.cliente,
-    ]);
-    res.status(201).json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error);
-  }
-});
-
-router.post("/clientes/eliminar", async (req, res) => {
-  try {
-    const [result] = await database.query('CALL eliminar_reg_cliente(?)', [req.body.cliente.id_reg_cliente])
-    res.status(200).json(result)
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error)
-  }
-
-})
-
 const getMaxOrden = async () => {
   const [result] = await database.query('SELECT MAX(orden) AS max_orden FROM clientes');
   return result[0].max_orden || 0;
@@ -101,10 +36,18 @@ const emitirActualizacionesClientes = async (req) => {
     }
   }
 }
+router.get('/clientes', async (req, res) => {
+  try {
+    const data = await obtenerClientesActualizados();
+    res.status(200).json(data)
+  } catch (error) {
+    console.error(error);
+    res.status(500).json([])
+  }
+})
 
 router.post('/clientes', async (req, res) => {
   const { dniruc, name, address, phone } = req.body;
-  console.log(dniruc, name, address, phone);
   try {
     if (name !== "") {
       const maxOrden = await getMaxOrden();
