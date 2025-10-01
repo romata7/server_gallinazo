@@ -47,7 +47,7 @@ router.post("/clientes/modificar", async (req, res) => {
   try {
     const [result] = await database.query('CALL modificar_reg_cliente(?, ?)', [
       req.body.cliente.id_reg_cliente,
-      req.body.cliente.cliente,      
+      req.body.cliente.cliente,
     ]);
     res.status(201).json(result);
   } catch (error) {
@@ -66,6 +66,25 @@ router.post("/clientes/eliminar", async (req, res) => {
   }
 
 })
+
+const getMaxOrden = async () => {
+  const [result] = await database.query('SELECT MAX(orden) AS max_orden FROM clientes');
+  return result[0].max_orden || 0;
+}
+
+router.post('/clientes', async (req, res) => {
+  const { dniruc, name, address, phone } = req.body;
+  console.log(dniruc, name, address, phone);
+  try {
+    if (name !== "") {
+      const maxOrden = await getMaxOrden();
+      const nuevoMaxOrden = maxOrden + 1;
+    }
+  } catch (error) {
+    console.error(error);
+
+  }
+});
 
 
 module.exports = router;
