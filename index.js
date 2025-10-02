@@ -1,8 +1,8 @@
 const express = require("express");
+const { createServer } = require('node:http');
 const cors = require("cors");
 const os = require("os");
-const http = require('http');
-const socketIo = require('socket.io');
+const { Server } = require('socket.io');
 
 const comandasRoutes = require("./routes/comandas");
 const mesasRoutes = require("./routes/mesas");
@@ -15,8 +15,8 @@ const gastosRoutes = require('./routes/gastos');
 const impresionesRoutes = require('./routes/impresiones');
 
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server, {
+const server = createServer(app);
+const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
@@ -28,11 +28,11 @@ const port = 4000;
 app.use(cors());
 app.use(express.json());
 
-// Middleware para pasar io a las rutas
+// Middleware para pasr io a las rutas
 app.use((req, res, next) => {
   req.io = io;
   next();
-});
+})
 
 app.use("/api", comandasRoutes);
 app.use("/api", mesasRoutes);
@@ -44,22 +44,16 @@ app.use("/api", resumenRoutes);
 app.use("/api", gastosRoutes);
 app.use('/api', impresionesRoutes)
 
-// Configuración de Socket.IO
 io.on('connection', socket => {
-  console.log('Cliente conectado:', socket.id);
-
-  socket.on('join-productos', () => {
-    socket.join('productos-room');
-    console.log(`Cliente ${socket.id} se unió a productos-room`);
-  });
+  console.log(socket.id, 'conectado');
 
   socket.on('join-clientes', () => {
     socket.join('clientes-room');
-    console.log(`Cliente ${socket.id} se unió a clientes-room`);
+    console.log(socket.id, 'en clientes-room');
   })
 
   socket.on('disconnect', () => {
-    console.log('Cliente desconectado:', socket.id);
+    console.log(socket.id, 'desconectado');
   });
 });
 

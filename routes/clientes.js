@@ -30,7 +30,7 @@ const emitirActualizacionesClientes = async (req) => {
     try {
       const data = await obtenerClientesActualizados();
       req.io.to('clientes-room').emit('clientes-actualizados', data);
-      console.log('Actualización de clientes emitida');
+      console.log('clientes-room: datos actualizados');
     } catch (error) {
       console.error(error);
     }
@@ -66,6 +66,5 @@ router.post('/clientes', async (req, res) => {
     return res.status(200).json(data);
   }
 });
-
 
 module.exports = router;
