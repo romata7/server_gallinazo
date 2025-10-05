@@ -50,6 +50,11 @@ io.on('connection', socket => {
   socket.on('join-clientes', () => {
     socket.join('clientes-room');
     console.log(socket.id, 'en clientes-room');
+  });
+
+  socket.on('join-productos', () => {
+    socket.join('productos-room');
+    console.log(socket.id, 'en productos-room');
   })
 
   socket.on('disconnect', () => {

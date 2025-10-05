@@ -67,4 +67,43 @@ router.post('/clientes', async (req, res) => {
   }
 });
 
+router.put('/clientes', async (req, res) => {
+  const { id } = req.params;
+  const { dniruc, name, address, phone, orden } = req.body;
+  try {
+    if (name !== "") {
+      await database.query('UPDATE clientes SET dniruc = ?, name = ?, address = ?, phone = ?, orden = ? WHERE id = ?', [dniruc, name, address, phone, orden, id]);
+      const fecha = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+      await database.query('INSERT INTO clientes_historial (operacion, id_cliente, dniruc, name, address, phone, orden, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', ['Modificado', id, dniruc, name, address, phone, orden, fecha]);
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    const data = await obtenerClientesActualizados();
+    await emitirActualizacionesClientes(req);
+    return res.status(200).json(data);
+  }
+});
+
+router.delete('/clientes', async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (id > 0) {
+      const [findClient] = await database.query('SELECT * FROM clientes WHERE id = ?', [id]);
+      if (findClient[0]) {
+        const { id, dniruc, name, address, phone, orden } = findClient[0];
+        await database.query('DELETE FROM clientes WHERE id = ?', [id]);
+        const fecha = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+        await database.query('INSERT INTO clientes_historial (operacion, id_cliente, dniruc, name, address, phone, orden, fecha) VALUES(?, ?, ?, ?, ?, ?, ?, ?)', ['Eliminado', id, dniruc, name, address, phone, orden, fecha]);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    const data = obtenerClientesActualizados();
+    await emitirActualizacionesClientes(req);
+    return res.status(200).json(data);
+  }
+})
+
 module.exports = router;
