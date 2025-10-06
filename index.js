@@ -3,6 +3,7 @@ const { createServer } = require('node:http');
 const cors = require("cors");
 const os = require("os");
 const { Server } = require('socket.io');
+require('dotenv').config();
 
 const comandasRoutes = require("./routes/comandas");
 const mesasRoutes = require("./routes/mesas");
@@ -23,7 +24,7 @@ const io = new Server(server, {
   }
 });
 
-const port = 4000;
+const port = process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
@@ -60,23 +61,6 @@ io.on('connection', socket => {
   socket.on('disconnect', () => {
     console.log(socket.id, 'desconectado');
   });
-});
-
-// Endpoint para obtener la IP
-app.get("/api/get-ip", (req, res) => {
-  const interfaces = os.networkInterfaces();
-  let localIP = "";
-
-  for (const interface in interfaces) {
-    for (const alias of interfaces[interface]) {
-      if (alias.family === "IPv4" && !alias.internal) {
-        localIP = alias.address;
-        break;
-      }
-    }
-    if (localIP) break; // Si ya encontramos la IP, salimos
-  }
-  res.json({ ip: localIP });
 });
 
 server.listen(port, "0.0.0.0", () => {
