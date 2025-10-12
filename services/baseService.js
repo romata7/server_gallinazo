@@ -35,7 +35,7 @@ class BaseService {
         return result.length > 0 ? result[0] : null;
     }
 
-    async getRegistrosActualizados(
+    async getRegistros(
         fechaInicio = new Date(),
         fechaFin = new Date(),
         conn = db.pool
@@ -43,7 +43,7 @@ class BaseService {
         const [registros, historial] = await Promise.all([
             db.query(`SELECT * FROM ${this.mainTable} ORDER BY orden`, [], conn),
             db.query(
-                `SELECT * FROM ${this.historyTable} WHERE fecha BETWEEN ? AND ? ORDER BY fecha DESC`,
+                `SELECT * FROM ${this.historyTable} WHERE fecha BETWEEN ? AND ? ORDER BY id DESC`,
                 [`${format(fechaInicio, 'yyyy-MM-dd')} 00:00:00`, `${format(fechaFin, 'yyyy-MM-dd')} 23:59:59`],
                 conn
             ),
@@ -53,6 +53,22 @@ class BaseService {
             [this.mainTable]: registros,
             [`${this.mainTable}_historial`]: historial
         };
+    }
+
+    async getHistorial(
+        fechaInicio = new Date(),
+        fechaFin = new Date(),
+        conn = db.pool,
+    ) {
+        console.log(fechaInicio)
+        console.log(fechaFin)
+        const historial = await db.query(
+            `SELECT * FROM ${this.historyTable} WHERE fecha BETWEEN ? AND ? ORDER BY id DESC`,
+            [`${format(fechaInicio, 'yyyy-MM-dd')} 00:00:00`, `${format(fechaFin, 'yyyy-MM-dd')} 23:59:59`],
+            conn
+        );
+
+        return historial;
     }
 
     async registrarEnHistorial(operacion, idReferencia, datos, conn) {
@@ -73,7 +89,8 @@ class BaseService {
         );
     }
 
-    async crearRegistro(datos, operacion = 'AGREGADO') {
+    async crearRegistro(datos) {
+        const operacion = 'AGREGADO';
         return db.executeTransaction(async (conn) => {
             const maxOrden = await this.getMaxOrden(conn);
             const nuevoMaxOrden = maxOrden + 1;
@@ -99,28 +116,23 @@ class BaseService {
                 { ...datos, orden: nuevoMaxOrden },
                 conn
             );
-
-            return {
-                id: nuevoId,
-                orden: nuevoMaxOrden
-            };
         });
     }
 
-    async modificarRegistro(id, datos, operacion = 'MODIFICADO') {
+    async actualizarRegistro(id, datos) {
+        const operacion = 'MODIFICADO';
         return db.executeTransaction(async (conn) => {
             // 1. Verificar que el registro existe
-            const [registroExistente] = await db.query(
+            const registros = await db.query(
                 `SELECT * FROM ${this.mainTable} WHERE id = ?`,
                 [id],
                 conn
             );
-
-            if (registroExistente.length === 0) {
+            if (registros.length === 0) {
                 throw new Error(`No se encontró el registro con ID: ${id}`);
             }
 
-            const registroActual = registroExistente[0];
+            const registro = registros[0];
 
             // 2. Construir la consulta UPDATE dinámicamente
             const campos = Object.keys(datos).map(campo => `${campo} = ?`).join(', ');
@@ -134,36 +146,28 @@ class BaseService {
             );
 
             // 4. Insertar en historial usando el método unificado
-            const datosActualizados = { ...registroActual, ...datos };
             await this.registrarEnHistorial(
                 operacion,
                 id,
-                datosActualizados,
+                datos,
                 conn
             );
-
-            return {
-                id: parseInt(id),
-                modificado: true,
-                orden: datosActualizados.orden
-            };
         });
     }
 
-    async eliminarRegistro(id, operacion = 'ELIMINADO') {
+    async eliminarRegistro(id) {
+        const operacion = 'ELIMINADO';
         return db.executeTransaction(async (conn) => {
             // 1. Obtener el registro antes de eliminarlo
-            const [registro] = await db.query(
+            const registros = await db.query(
                 `SELECT * FROM ${this.mainTable} WHERE id = ?`,
                 [id],
                 conn
             );
-
-            if (registro.length === 0) {
+            const registro = registros[0];
+            if (registros.length === 0) {
                 throw new Error(`No se encontró el registro con ID: ${id}`);
             }
-
-            const registroCompleto = registro[0];
 
             // 2. Eliminar de la tabla principal
             await db.query(
@@ -176,33 +180,27 @@ class BaseService {
             await this.registrarEnHistorial(
                 operacion,
                 id,
-                registroCompleto,
+                registro,
                 conn
             );
-
-            return {
-                id: parseInt(id),
-                eliminado: true,
-                [this.uniqueField]: registroCompleto[this.uniqueField]
-            };
         });
     }
 
     async subirOrden(id) {
         return db.executeTransaction(async (conn) => {
             // 1. Verificar que el registro existe
-            const [registro] = await db.query(
+            const registros = await db.query(
                 `SELECT * FROM ${this.mainTable} WHERE id = ?`,
                 [id],
                 conn
             );
 
-            if (registro.length === 0) {
+            if (registros.length === 0) {
                 throw new Error(`No se encontró el registro con ID: ${id}`);
             }
 
-            const item = registro[0];
-            const { orden } = item;
+            const registro = registros[0];
+            const { orden } = registro;
 
             // 2. Buscar elemento anterior
             const menor = await this.getProximoMenor(orden, conn);
@@ -225,34 +223,26 @@ class BaseService {
             );
 
             // 4. Registrar en historial usando el método unificado
-            await this.registrarEnHistorial('SUBE', id, item, conn);
+            await this.registrarEnHistorial('SUBE', id, registro, conn);
             await this.registrarEnHistorial('BAJA', menor.id, menor, conn);
-
-            return {
-                id: parseInt(id),
-                operacion: 'SUBIDO',
-                ordenAnterior: orden,
-                ordenNuevo: menor.orden,
-                elementoIntercambiado: menor[this.uniqueField]
-            };
         });
     }
 
     async bajarOrden(id) {
         return db.executeTransaction(async (conn) => {
             // 1. Verificar que el registro existe
-            const [registro] = await db.query(
+            const registros = await db.query(
                 `SELECT * FROM ${this.mainTable} WHERE id = ?`,
                 [id],
                 conn
             );
 
-            if (registro.length === 0) {
+            if (registros.length === 0) {
                 throw new Error(`No se encontró el registro con ID: ${id}`);
             }
 
-            const item = registro[0];
-            const { orden } = item;
+            const registro = registros[0];
+            const { orden } = registro;
 
             // 2. Buscar elemento siguiente
             const mayor = await this.getProximoMayor(orden, conn);
@@ -275,16 +265,8 @@ class BaseService {
             );
 
             // 4. Registrar en historial usando el método unificado
-            await this.registrarEnHistorial('BAJA', id, item, conn);
+            await this.registrarEnHistorial('BAJA', id, registro, conn);
             await this.registrarEnHistorial('SUBE', mayor.id, mayor, conn);
-
-            return {
-                id: parseInt(id),
-                operacion: 'BAJADO',
-                ordenAnterior: orden,
-                ordenNuevo: mayor.orden,
-                elementoIntercambiado: mayor[this.uniqueField]
-            };
         });
     }
 }

@@ -9,8 +9,6 @@ const comandasRoutes = require("./routes/comandas");
 const mesasRoutes = require("./routes/mesas");
 const mozosRoutes = require("./routes/mozos");
 const tipos_pagoRoutes = require("./routes/tipos_pago");
-const productosRoutes = require("./routes/productos");
-const clientesRoutes = require("./routes/clientes");
 const resumenRoutes = require("./routes/resumen");
 const gastosRoutes = require('./routes/gastos');
 const impresionesRoutes = require('./routes/impresiones');
@@ -35,12 +33,12 @@ app.use((req, res, next) => {
   next();
 })
 
+app.use("/api", require('./routes/clientes'));
+app.use("/api", require('./routes/productos'));
 app.use("/api", comandasRoutes);
 app.use("/api", mesasRoutes);
-app.use("/api", clientesRoutes);
 app.use("/api", mozosRoutes);
 app.use("/api", tipos_pagoRoutes);
-app.use("/api", productosRoutes);
 app.use("/api", resumenRoutes);
 app.use("/api", gastosRoutes);
 app.use('/api', impresionesRoutes)
