@@ -343,8 +343,8 @@ CREATE TABLE reg_productos(
 DROP TABLE IF EXISTS productos;
 CREATE TABLE productos(
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) UNIQUE,
-    cost DECIMAL(10,2),
+    producto VARCHAR(100) UNIQUE,
+    costo DECIMAL(10,2),
     orden INT
 );
 
@@ -353,8 +353,8 @@ CREATE TABLE productos_historial(
     id INT AUTO_INCREMENT PRIMARY KEY,
     operacion VARCHAR(100),
     id_producto INT,
-    name VARCHAR(100),
-    cost DECIMAL(10,2),
+    productoo VARCHAR(100),
+    costo DECIMAL(10,2),
     orden INT,
     fecha DATETIME
 );
@@ -363,9 +363,9 @@ DROP TABLE IF EXISTS clientes;
 CREATE TABLE clientes(
     id INT AUTO_INCREMENT PRIMARY KEY,
     dniruc VARCHAR(11) UNIQUE,
-    name VARCHAR(100),
-    address VARCHAR(200),
-    phone VARCHAR(13),
+    cliente VARCHAR(100),
+    direccion VARCHAR(200),
+    telefono VARCHAR(13),
     orden INT
 );
 
@@ -375,9 +375,9 @@ CREATE TABLE clientes_historial(
     operacion VARCHAR(100),
     id_cliente INT,
     dniruc VARCHAR(11),
-    name VARCHAR(100),
-    address VARCHAR(200),
-    phone VARCHAR(13),
+    cliente VARCHAR(100),
+    direccion VARCHAR(200),
+    telefono VARCHAR(13),
     orden INT,
     fecha DATETIME
 );
@@ -403,9 +403,9 @@ DROP TABLE IF EXISTS mozos;
 CREATE TABLE mozos(
     id INT AUTO_INCREMENT PRIMARY KEY,
     dni VARCHAR(8),
-    name VARCHAR(100),
-    address VARCHAR(200),
-    phone VARCHAR(13),
+    mozo VARCHAR(100),
+    direccion VARCHAR(200),
+    telefono VARCHAR(13),
     orden INT
 );
 
@@ -415,9 +415,9 @@ CREATE TABLE mozos_historial(
     operacion VARCHAR(100),
     id_mozo INT,
     dni VARCHAR(8),
-    name VARCHAR(100),
-    address VARCHAR(200),
-    phone VARCHAR(13),
+    mozo VARCHAR(100),
+    direccion VARCHAR(200),
+    telefono VARCHAR(13),
     orden INT,
     fecha DATETIME
 );
@@ -452,7 +452,7 @@ CREATE TABLE gastos_historial(
     id INT AUTO_INCREMENT PRIMARY KEY,
     operacion VARCHAR(100),
     id_gasto INT,
-    gato VARCHAR(100),
+    gasto VARCHAR(100),
     detalles VARCHAR(200),
     orden INT,
     fecha DATETIME

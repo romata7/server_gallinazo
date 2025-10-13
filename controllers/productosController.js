@@ -38,12 +38,12 @@ const productosController = {
 
     async crearProducto(req, res) {
         try {
-            const { name, cost } = req.body;
-            if (!name) {
+            const { producto, costo } = req.body;
+            if (!producto) {
                 res.status(400).json({ error: 'El nombre es requerido' });
             }
 
-            await productosService.crearRegistro({ name, cost });
+            await productosService.crearRegistro({ producto, costo });
 
             await emitirProductosActualizados(req);
 
@@ -57,12 +57,12 @@ const productosController = {
     async actualizarProducto(req, res) {
         try {
             const { id } = req.params;
-            const { name, cost } = req.body;
-            if (!name) {
+            const { producto, costo } = req.body;
+            if (!producto) {
                 res.status(400).json({ error: 'El nombre es requerido' });
             }
 
-            await productosService.actualizarRegistro(id, { name, cost });
+            await productosService.actualizarRegistro(id, { producto, costo });
 
             await emitirProductosActualizados(req);
 

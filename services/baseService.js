@@ -2,10 +2,9 @@ const db = require('../models/database');
 const { format } = require('date-fns/format');
 
 class BaseService {
-    constructor(mainTable, historyTable, uniqueField = 'name') {
+    constructor(mainTable, historyTable) {
         this.mainTable = mainTable;
-        this.historyTable = historyTable;
-        this.uniqueField = uniqueField;
+        this.historyTable = historyTable;        
     }
 
     async getMaxOrden(conn = db.pool) {

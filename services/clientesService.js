@@ -2,7 +2,7 @@ const BaseService = require('./baseService');
 
 class ClientesService extends BaseService {
     constructor() {
-        super('clientes', 'clientes_historial', 'name');
+        super('clientes', 'clientes_historial');
     }
 
     async buscarPorDniRuc(dniruc) {

@@ -2,7 +2,7 @@ const BaseService = require('./baseService');
 
 class ProductosService extends BaseService {
     constructor() {
-        super('productos', 'productos_historial', 'producto');
+        super('productos', 'productos_historial');
     }
 
     // Métpds específicos de productos

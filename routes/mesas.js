@@ -1,71 +1,13 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const database = require("../models/database");
+const mesasController = require('../controllers/mesasController');
 
-router.get("/mesas", async (req, res) => {
-  try {
-    const [results] = await database.query("CALL listar_mesas()");
-    res.json(results[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json([]);
-  }
-});
-
-router.get("/mesas/all", async (req, res) => {
-  try {
-    const [response] = await database.query('SELECT * FROM reg_mesas')
-    res.status(201).json(response)
-  } catch (error) {
-    console.error(error);
-    res.status(500).json([])
-  }
-})
-router.get("/mesas/last_id", async (req, res) => {
-  try {
-    const [response] = await database.query(
-      "SELECT MAX(id_reg_mesa) AS last_id FROM reg_mesas"
-    );
-    res.status(201).json(response[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(0);
-  }
-});
-
-router.post("/mesas/agregar", async (req, res) => {
-  try {
-    const [result] = await database.query('CALL agregar_reg_mesa(?)', [req.body.mesa.mesa]);
-    res.status(201).json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error);
-  }
-});
-
-router.post("/mesas/modificar", async (req, res) => {
-  try {
-    const [result] = await database.query('CALL modificar_reg_mesa(?, ?)', [
-      req.body.mesa.id_reg_mesa,
-      req.body.mesa.mesa,      
-    ]);
-    res.status(201).json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error);
-  }
-});
-
-router.post("/mesas/eliminar", async (req, res) => {
-  try {
-    const [result] = await database.query('CALL eliminar_reg_mesa(?)', [req.body.mesa.id_reg_mesa])
-    res.status(200).json(result)
-  } catch (error) {
-    console.error(error);
-    res.status(500).json(error)
-  }
-
-})
-
+router.get('/mesas', mesasController.obtenerMesas);
+router.post('/mesas', mesasController.crearMesa);
+router.put('/mesas/:id', mesasController.actualizarMesa);
+router.delete('/mesas/:id', mesasController.eliminarMesa);
+router.post('/mesas/subir/:id', mesasController.subirMesa);
+router.post('/mesas/bajar/:id', mesasController.bajarMesa);
+router.get('/mesas/historial/:fi/:ff', mesasController.getHistorial);
 
 module.exports = router;

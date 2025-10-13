@@ -38,12 +38,12 @@ const clientesController = {
 
     async crearCliente(req, res) {
         try {
-            const { dniruc, name, address, phone } = req.body;
-            if (!name) {
+            const { dniruc, cliente, direccion, telefono } = req.body;
+            if (!cliente) {
                 res.status(400).json({ error: 'El nombre es requerido' });
             }
 
-            await clientesService.crearRegistro({ dniruc, name, address, phone });
+            await clientesService.crearRegistro({ dniruc, cliente, direccion, telefono });
 
             await emitirClientesActualizados(req);
 
@@ -57,13 +57,13 @@ const clientesController = {
     async actualizarCliente(req, res) {
         try {
             const { id } = req.params;
-            const { dniruc, name, address, phone } = req.body;
+            const { dniruc, cliente, direccion, telefono } = req.body;
 
-            if (!name) {
+            if (!cliente) {
                 res.status(400).json({ error: 'El nombre es requerido' });
             }
 
-            await clientesService.actualizarRegistro(id, { dniruc, name, address, phone });
+            await clientesService.actualizarRegistro(id, { dniruc, cliente, direccion, telefono });
 
             await emitirClientesActualizados(req);
 
