@@ -1,6 +1,6 @@
 const BaseService = require('./baseService');
 
-class ClientesServices extends BaseService {
+class ClientesService extends BaseService {
     constructor() {
         super('clientes', 'clientes_historial', 'name');
     }
@@ -14,4 +14,4 @@ class ClientesServices extends BaseService {
     }
 }
 
-module.exports = new ClientesServices();
+module.exports = new ClientesService();

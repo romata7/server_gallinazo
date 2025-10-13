@@ -1,13 +1,15 @@
-const productosServices = require('../services/productosService');
+const productosService = require('../services/productosService');
+const { format } = require('date-fns/format');
 
-const emitirActualizacionesProductos = async (req) => {
+const emitirProductosActualizados = async (req) => {
     if (req.io) {
         try {
-            const data = await productosServices.getRegistros();
+            const fecha = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+            const data = await productosService.getRegistros();
             req.io.to('productos-room').emit('productos-actualizados', data);
-            console.log('productos-room: datos actualizados');
+            console.log(fecha, 'productos-room: datos actualizados');
         } catch (error) {
-            console.error('emitirActualizacionesProductos:', error);
+            console.error('emitirProductosActualizados:', error);
         }
     }
 }
@@ -15,51 +17,58 @@ const emitirActualizacionesProductos = async (req) => {
 const productosController = {
     async obtenerProductos(req, res) {
         try {
-            const data = await productosServices.getRegistros();
+            const data = await productosService.getRegistros();
             res.status(200).json(data);
         } catch (error) {
-            console.error('obtenerProductos:', error);
-            res.status(500).json({ error: 'Error obtener productos del servidor' });
+            console.error(error);
+            res.status(500).json({ error: 'Error al obtener productos' });
+        }
+    },
+
+    async getHistorial(req, res) {
+        try {
+            const { fi, ff } = req.params;
+            const data = await productosService.getHistorial(fi, ff);
+            res.status(200).json(data);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Error al obtener historial' });
         }
     },
 
     async crearProducto(req, res) {
         try {
-            const { producto, costo } = req.body;
-
-            if (!producto) {
-                res.status(400).json({ error: 'El producto es requerido' });
+            const { name, cost } = req.body;
+            if (!name) {
+                res.status(400).json({ error: 'El nombre es requerido' });
             }
 
-            await productosServices.crearRegistro({ producto, costo });
+            await productosService.crearRegistro({ name, cost });
 
-            await emitirActualizacionesProductos(req);
-            const data = await productosServices.getRegistros()
+            await emitirProductosActualizados(req);
 
-            res.status(200).json(data);
+            res.status(200).json({ message: 'Producto creado' });
         } catch (error) {
-            console.error('crearProducto:', error);
-            res.status(500).json({ error: 'Error al crear producto en el servidor' });
+            console.error(error);
+            res.status(500).json({ error: 'Error al crear producto' });
         }
     },
 
     async actualizarProducto(req, res) {
         try {
             const { id } = req.params;
-            const { producto, costo, orden } = req.body;
-
-            if (!producto) {
-                return res.status(400).json({ error: 'El producto es requerido' });
+            const { name, cost } = req.body;
+            if (!name) {
+                res.status(400).json({ error: 'El nombre es requerido' });
             }
 
-            await productosServices.actualizarProducto(id, { producto, costo, orden });
+            await productosService.actualizarRegistro(id, { name, cost });
 
-            await emitirActualizacionesProductos(req);
-            const data = await productosServices.getRegistros();
+            await emitirProductosActualizados(req);
 
-            res.status(200).json(data);
+            res.status(200).json({ message: 'Producto actualizado' })
         } catch (error) {
-            console.error('actualizarProducto:', error);
+            console.error(error);
             res.status(500).json({ error: 'Error al actualizar producto' });
         }
     },
@@ -68,17 +77,46 @@ const productosController = {
         try {
             const { id } = req.params;
 
-            await productosServices.eliminarRegistro(id);
+            await productosService.eliminarRegistro(id);
 
-            await emitirActualizacionesProductos(req);
-            const data = await productosServices.getRegistros();
+            await emitirProductosActualizados(req),
 
-            res.status(200).json(data);
+                res.status(200).json({ message: 'Producto eliminado' });
         } catch (error) {
-            console.error('eliminarPorducto:', error);
+            console.error(error);
             res.status(500).json({ error: 'Error al eliminar producto' });
         }
+    },
+
+    async subirProducto(req, res) {
+        try {
+            const { id } = req.params;
+
+            await productosService.subirOrden(id);
+
+            await emitirProductosActualizados(req);
+
+            res.status(200).json({ message: 'Producto subió de orden' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Error al subir de orden de producto' });
+        }
+    },
+
+    async bajarProducto(req, res) {
+        try {
+            const { id } = req.params;
+
+            await productosService.bajarOrden(id);
+
+            await emitirProductosActualizados(req);
+
+            res.status(200).json({ message: 'Producto bajó de orden' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Error al bajar orden de producto' });
+        }
     }
-}
+};
 
 module.exports = productosController;

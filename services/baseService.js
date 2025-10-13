@@ -56,21 +56,22 @@ class BaseService {
     }
 
     async getHistorial(
-        fechaInicio = new Date(),
-        fechaFin = new Date(),
+        fechaInicio = format(new Date(), 'yyyy-MM-dd'),
+        fechaFin = format(new Date(), 'yyyy-MM-dd'),
         conn = db.pool,
     ) {
-        console.log(fechaInicio)
-        console.log(fechaFin)
+        let fi = `${fechaInicio} 00:00:00`;
+        let ff = `${fechaFin} 23:59:59`;
+
         const historial = await db.query(
             `SELECT * FROM ${this.historyTable} WHERE fecha BETWEEN ? AND ? ORDER BY id DESC`,
-            [`${format(fechaInicio, 'yyyy-MM-dd')} 00:00:00`, `${format(fechaFin, 'yyyy-MM-dd')} 23:59:59`],
+            [fi, ff],
             conn
         );
 
         return historial;
     }
-
+    
     async registrarEnHistorial(operacion, idReferencia, datos, conn) {
         const fecha = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
 
