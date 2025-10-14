@@ -8,6 +8,6 @@ router.put('/productos/:id', productosController.actualizarProducto);
 router.delete('/productos/:id', productosController.eliminarProducto);
 router.post('/productos/subir/:id', productosController.subirProducto);
 router.post('/productos/bajar/:id', productosController.bajarProducto);
-router.post('/productos/historial/:fi/:ff', productosController.getHistorial);
+router.get('/productos/historial/:fi/:ff', productosController.getHistorial);
 
 module.exports = router;

@@ -353,7 +353,7 @@ CREATE TABLE productos_historial(
     id INT AUTO_INCREMENT PRIMARY KEY,
     operacion VARCHAR(100),
     id_producto INT,
-    productoo VARCHAR(100),
+    producto VARCHAR(100),
     costo DECIMAL(10,2),
     orden INT,
     fecha DATETIME

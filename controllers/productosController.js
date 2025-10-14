@@ -39,6 +39,7 @@ const productosController = {
     async crearProducto(req, res) {
         try {
             const { producto, costo } = req.body;
+            console.log(producto, costo);
             if (!producto) {
                 res.status(400).json({ error: 'El nombre es requerido' });
             }

@@ -1,4 +1,4 @@
-const BaseService = require('/baseService');
+const BaseService = require('./baseService');
 
 class MesasService extends BaseService {
     constructor() {
