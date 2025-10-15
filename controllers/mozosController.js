@@ -1,4 +1,3 @@
-const gastosService = require('../services/gastosService');
 const mozosService = require('../services/mozosService');
 const { format } = require('date-fns/format');
 
@@ -30,7 +29,7 @@ const mozosController = {
     async getHistorial(req, res) {
         try {
             const { fi, ff } = req.params;
-            const data = await gastosService.getHistorial(fi, ff);
+            const data = await mozosService.getHistorial(fi, ff);
 
             res.status(200).json(data);
         } catch (error) {
