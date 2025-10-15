@@ -63,7 +63,7 @@ const mesasController = {
                 res.status(400).json({ error: 'Nombre de mesa es requerido' });
             }
 
-            await mesasService.actaulizarRegistro(id, { mesa });
+            await mesasService.actualizarRegistro(id, { mesa });
 
             await emitirMesasActualizadas(req);
 

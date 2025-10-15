@@ -6,11 +6,7 @@ const { Server } = require('socket.io');
 require('dotenv').config();
 
 const comandasRoutes = require("./routes/comandas");
-const mesasRoutes = require("./routes/mesas");
-const mozosRoutes = require("./routes/mozos");
-const tipos_pagoRoutes = require("./routes/tipos_pago");
 const resumenRoutes = require("./routes/resumen");
-const gastosRoutes = require('./routes/gastos');
 const impresionesRoutes = require('./routes/impresiones');
 
 const app = express();
@@ -35,12 +31,12 @@ app.use((req, res, next) => {
 
 app.use("/api", require('./routes/clientes'));
 app.use("/api", require('./routes/productos'));
+app.use("/api", require('./routes/mesas'));
+app.use("/api", require('./routes/mozos'));
+app.use("/api", require('./routes/tipopagos'));
+app.use("/api", require('./routes/gastos'));
 app.use("/api", comandasRoutes);
-app.use("/api", mesasRoutes);
-app.use("/api", mozosRoutes);
-app.use("/api", tipos_pagoRoutes);
 app.use("/api", resumenRoutes);
-app.use("/api", gastosRoutes);
 app.use('/api', impresionesRoutes)
 
 io.on('connection', socket => {
@@ -54,7 +50,27 @@ io.on('connection', socket => {
   socket.on('join-productos', () => {
     socket.join('productos-room');
     console.log(socket.id, 'en productos-room');
-  })
+  });
+
+  socket.on('join-mesas', () => {
+    socket.join('mesas-room');
+    console.log(socket.id, 'en mesas-room');
+  });
+
+  socket.on('join-mozos', () => {
+    socket.join('mozos-room');
+    console.log(socket.id, 'en mozos-room');
+  });
+
+  socket.on('join-gastos', () => {
+    socket.join('gastos-room');
+    console.log(socket.id, 'en gastos-room');
+  });
+
+  socket.on('join-tipopagos', () => {
+    socket.join('tipopagos-room');
+    console.log(socket.id, 'en tipopagos-room');
+  });
 
   socket.on('disconnect', () => {
     console.log(socket.id, 'desconectado');
