@@ -7,7 +7,7 @@ require('dotenv').config();
 
 const comandasRoutes = require("./routes/comandas");
 const resumenRoutes = require("./routes/resumen");
-const impresionesRoutes = require('./routes/impresiones');
+// const impresionesRoutes = require('./routes/impresiones');
 
 const app = express();
 const server = createServer(app);
@@ -37,7 +37,7 @@ app.use("/api", require('./routes/tipopagos'));
 app.use("/api", require('./routes/gastos'));
 app.use("/api", comandasRoutes);
 app.use("/api", resumenRoutes);
-app.use('/api', impresionesRoutes)
+// app.use('/api', impresionesRoutes)
 
 io.on('connection', socket => {
   console.log(socket.id, 'conectado');

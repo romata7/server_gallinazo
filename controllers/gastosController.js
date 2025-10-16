@@ -38,11 +38,11 @@ const gastosController = {
 
     async craerGasto(req, res) {
         try {
-            const { gasto, detalles } = req.body;
+            const { gasto, detalles, costo } = req.body;
             if (!gasto) {
                 res.status(400).json({ error: 'El campo gasto es necesario' });
             }
-            await gastosService.crearRegistro({ gasto, detalles });
+            await gastosService.crearRegistro({ gasto, detalles, costo });
 
             await emitirGastosActualizados(req);
 
@@ -56,13 +56,13 @@ const gastosController = {
     async actualizarGasto(req, res) {
         try {
             const { id } = req.params;
-            const { gasto, detalles } = req.body;
+            const { gasto, detalles, costo } = req.body;
 
             if (!gasto) {
                 res.status(400).json({ error: 'El campo gasto es necesario' });
             }
 
-            await gastosService.actualizarRegistro(id, { gasto, detalles });
+            await gastosService.actualizarRegistro(id, { gasto, detalles, costo });
 
             await emitirGastosActualizados(req);
 
