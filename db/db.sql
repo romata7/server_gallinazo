@@ -121,3 +121,47 @@ CREATE TABLE gastos_historial(
     orden INT,
     fecha DATETIME
 );
+
+DROP TABLE IF EXISTS comandas;
+CREATE TABLE comandas(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    mozo INT,
+    mesa INT,
+    cliente INT,
+    tipopago INT,
+    detalles VARCHAR(100)    
+);
+
+DROP TABLE IF EXISTS comandas_historial;
+CREATE TABLE comandas_historial(
+    id INT PRIMARY KEY,
+    id_comanda INT,
+    operacion VARCHAR(100),
+    fecha DATETIME,
+    mozo INT,
+    mesa INT,
+    cliente INT,
+    tipopago INT,
+    detalles VARCHAR(100) 
+);
+
+DROP TABLE IF EXISTS detalles;
+CREATE TABLE detalles(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_comanda INT,
+    producto VARCHAR(100),
+    costo DECIMAL(10,2),
+    detalles VARCHAR(100)
+);
+
+DROP TABLE IF EXISTS detalles_historial;
+CREATE TABLE detalles_historial(
+    id INT AUTO_INCREMENT PRIMARY KEY,    
+    id_detalle INT,
+    operacion VARCHAR(100),
+    fecha DATETIME,
+    id_comanda INT,
+    producto VARCHAR(100),
+    costo DECIMAL(10,2),
+    detalles VARCHAR(100)
+);
